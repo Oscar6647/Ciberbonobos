@@ -12,49 +12,34 @@ https://education.lego.com/en-us/support/mindstorms-ev3/building-instructions#bu
 """
 
 from pybricks.hubs import EV3Brick
-from pybricks.ev3devices import Motor, TouchSensor, ColorSensor
+from pybricks.ev3devices import TouchSensor, ColorSensor
 from pybricks.parameters import Port, Stop, Direction
+from pybricks.pupdevices import Motor
 from pybricks.tools import wait
-
-import chess
 
 # Initialize the EV3 Brick
 ev3 = EV3Brick()
 
-# Configure the gripper motor on Port A with default settings.
-gripper_motor = Motor(Port.A)
+claw_motor = Motor(Port.A)
+x_motor = Motor(Port.B)
+y_motor = Motor(Port.C)
+z_motor = Motor(Port.D)
 
-# Configure the elbow motor. It has an 8-teeth and a 40-teeth gear
-# connected to it. We would like positive speed values to make the
-# arm go upward. This corresponds to counterclockwise rotation
-# of the motor.
-elbow_motor = Motor(Port.B, Direction.COUNTERCLOCKWISE, [8, 40])
+claw_motor.control.limits(speed=60, acceleration=120)
+x_motor.control.limits(speed=60, acceleration=120)
+y_motor.control.limits(speed=60, acceleration=120)
+z_motor.control.limits(speed=60, acceleration=120)
+claw_switch = TouchSensor(Port.S1)
 
-# Configure the motor that rotates the base. It has a 12-teeth and a
-# 36-teeth gear connected to it. We would like positive speed values
-# to make the arm go away from the Touch Sensor. This corresponds
-# to counterclockwise rotation of the motor.
-base_motor = Motor(Port.C, Direction.COUNTERCLOCKWISE, [12, 36])
+def go_to(x,y):
+    if x==0 and y==0:
+        x_motor.run_time(-30,1000)
 
-# Limit the elbow and base accelerations. This results in
-# very smooth motion. Like an industrial robot.
-elbow_motor.control.limits(speed=60, acceleration=120)
-base_motor.control.limits(speed=60, acceleration=120)
+def go_down():
+    while not claw_switch.pressed():
+        z_motor.run_time(-50,1000)
 
-# Set up the Touch Sensor. It acts as an end-switch in the base
-# of the robot arm. It defines the starting point of the base.
-base_switch = TouchSensor(Port.S1)
 
-# Set up the Color Sensor. This sensor detects when the elbow
-# is in the starting position. This is when the sensor sees the
-# white beam up close.
-elbow_sensor = ColorSensor(Port.S3)
-
-# Initialize the elbow. First make it go down for one second.
-# Then make it go upwards slowly (15 degrees per second) until
-# the Color Sensor detects the white beam. Then reset the motor
-# angle to make this the zero point. Finally, hold the motor
-# in place so it does not move.
 elbow_motor.run_time(-30, 1000)
 elbow_motor.run(15)
 while elbow_sensor.reflection() < 32:
